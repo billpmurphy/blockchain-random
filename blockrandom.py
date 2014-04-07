@@ -1,18 +1,20 @@
-import multiprocessing, Queue, sys, urllib2
+import multiprocessing, threading, Queue, sys, urllib2
 from murmur3 import murmur3_bytes, iterative_murmur3, murmur3_32
 from time import sleep, time
-from threading import RLock
 from json import loads
 from collections import deque
 from operator import add
+from random import SystemRandom
 
 
 _queue = multiprocessing.Queue(5000)
 _spare_queue = multiprocessing.Queue(5000)
 _url = "https://blockchain.info/unconfirmed-transactions?format=json"
 
-_cache = RLock()
+_cache = threading.RLock()
 _cache.most_recent = 0
+
+_sysrandom = SystemRandom() # only use in the most dire circumstances
 
 class BlockchainError(Exception):
     pass
@@ -30,8 +32,7 @@ def get_unconfirmed_transactions(url=_url):
             try:
                 response = urllib2.urlopen(url)
                 if response.code == 200:
-                    json = loads(response.read())
-                    return json
+                    return loads(response.read())
             except (urllib2.HTTPError, urllib2.URLError):
                 sleep(11) # as per blockchain.info API policy
             tries_left -= 1
@@ -41,34 +42,52 @@ def fill_cache():
     """
     Fill the cache with entropy from recent transactions.
     """
-    tries = 8
-    while True:
-        if tries <= 0:
-            raise BlockchainError("Cannot find new transactions")
-        else:
-            transaction_json = get_unconfirmed_transactions()['txs']
-            if len(transaction_json) == 0 or \
-                    transaction_json[0]['time'] <= _cache.most_recent:
-                tries -= 1
-                sleep(11) # as per blockchain.info API policy
-            else:
-                break
-    
     _cache.acquire()
     try:
-        transaction_json = filter(lambda x: x > _cache.most_recent, transaction_json)
-        _cache.most_recent = max((t['time'] for t in transaction_json))
+        tries = 8
+        while True:
+            if tries <= 0:
+                raise BlockchainError("Cannot find new transactions")
+            else:
+                transactions = get_unconfirmed_transactions()['txs']
+                if len(transactions) == 0 or \
+                        transactions[0]['time'] <= _cache.most_recent:
+                    tries -= 1
+                    sleep(11) # as per blockchain.info API policy
+                else:
+                    break
+        transactions = filter(lambda x: x > _cache.most_recent, transactions)
+        _cache.most_recent = max((t['time'] for t in transactions))
     except Exception as e:
         sys.stderr.write(e)
     finally:
         _cache.release()
     
-    hex_hashes = reduce(add, (t['hash'] for t in transaction_json))
+    hex_hashes = reduce(add, (t['hash'] for t in transactions))
     bytes = bytearray.fromhex(hex_hashes)
 
     for byte in bytes[::-1]:
-        _queue.put(byte)
-        _spare_queue.put(byte)
+        try:
+            _queue.put_nowait(byte)
+        except Queue.Full:
+            pass
+        try:
+            _spare_queue.put_nowait(byte)
+        except Queue.Full:
+            pass
+
+
+def use_cpu_entropy():
+    """
+    If, by some freak accident, we have nothing left in the spare cache,
+    lean on Python's random.SystemRandom to get some entropy.
+    """
+    sys.stderr.write("WARNING: Using /dev/urandom.")
+    try:
+        for byte in (_sysrandom.randint(0, 256) for i in range(8)):
+            _spare_queue.put_nowait(byte)
+    except Queue.Full:
+        pass
 
 
 def randbytes(num_bytes):
@@ -85,7 +104,9 @@ def randbytes(num_bytes):
         try:
             bytes.append(_queue.get_nowait())
         except Queue.Empty:
-            fill_cache()
+            refill = threading.Thread(target=fill_cache())
+            refill.start()
+            refill.join()
     return bytearray(bytes)
 
 
@@ -101,24 +122,23 @@ def u_randbytes(num_bytes):
     bytes = []
     block = []
     while len(bytes) < num_bytes:
+        try:
+            block.append(_queue.get_nowait())
+        except Queue.Empty:
+            try:
+                block = [_spare_queue.get_nowait() for i in range(4)]
+                block = list(murmur3_32(bytearray(block)))
+            except Queue.Empty:
+                use_cpu_entropy() # temporary hack
         if len(block) == 4:
-            for byte in murmur3_32(bytearray(block)):
+            for byte in block:
                 bytes.append(byte)
                 try:
                     _spare_queue.put_nowait(byte)
                 except Queue.Full:
                     continue
             block = []
-        try:
-            block.append(_spare_queue.get_nowait())
-        except Queue.Empty:
-            # temporary hack
-            try:
-                for byte in murmur3_32(time()):
-                    _spare_queue.put_nowait(byte)
-            except Queue.Full:
-                pass
-    return bytearray(bytes)
+    return bytearray(bytes)[:num_bytes]
 
 
 def randbool():
@@ -127,11 +147,7 @@ def randbool():
     If no entropy is available, the current thread will block until more
     is retrieved from the blockchain.
     """
-    while True:
-        try:
-            return (_queue.get_nowait() % 2) == 0
-        except Queue.Empty:
-            fill_cache()
+    return (iter(randbytes(1)).next() % 2) == 0
 
 
 def u_randbool():
@@ -139,9 +155,8 @@ def u_randbool():
     Returns a random boolean value.
     If no entropy is available, previous entropy will be re-used.
     """
-    # coming soon
-    pass
-    
+    return (iter(u_randbytes(1)).next() % 2) == 0   
+
 
 def randint(min_n, max_n):
     """

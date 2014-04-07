@@ -21,6 +21,9 @@ If you want a non-blocking random generator that will recycle previously collect
 ```python
 >>> blockrandom.u_randbytes(5)
 bytearray(b'\xe5\x84Y\x87a')
+
+>>> blockrandom.u_randbool()
+False
 ```
 
 More features (like `random()`, `randint()`, and `uniform()`) are coming soon!
