@@ -93,7 +93,7 @@ def murmur3_bytes(bytes, times=1):
     resulting bytearray.
     """
     if len(bytes) % 4 != 0:
-        bytearray.fromhex("00") * (4 - (len(bytes) % 4)) + bytes
-    blocks = [str(bytes)[i:i+4] for i in range(0, len(bytes), 4)]
-    mbytes = reduce(add, (iterative_murmur3(bytearray(b), times) for b in blocks))
-    return mbytes[:len(bytes)]
+        bytes = bytearray.fromhex("00") * (4 - (len(bytes) % 4)) + bytes
+    blocks = (str(bytes)[i:i+4] for i in range(0, len(bytes), 4))
+    hashed_blocks =  (iterative_murmur3(bytearray(b), times) for b in blocks)
+    return reduce(add, hashed_blocks)

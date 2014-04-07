@@ -14,6 +14,9 @@ bytearray(b'\xff\xdcb\x9c\xee')
 
 >>> blockrandom.randbool()
 True
+
+>>> blockrandom.randint(0, 100)
+43
 ````
 
 If you want a non-blocking random generator that will recycle previously collected entropy, similar to `/dev/urandom`, you can use the following:
@@ -24,9 +27,12 @@ bytearray(b'\xe5\x84Y\x87a')
 
 >>> blockrandom.u_randbool()
 False
+
+>>> blockrandom.u_randint(0, 100)
+22
 ```
 
-More features (like `random()`, `randint()`, and `uniform()`) are coming soon!
+More features (like `random()` and `uniform()`) are coming soon!
 
 ### How it works ###
 

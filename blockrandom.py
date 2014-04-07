@@ -5,6 +5,7 @@ from json import loads
 from collections import deque
 from operator import add
 from random import SystemRandom
+from struct import unpack
 
 
 _queue = multiprocessing.Queue(5000)
@@ -147,7 +148,7 @@ def randbool():
     If no entropy is available, the current thread will block until more
     is retrieved from the blockchain.
     """
-    return (iter(randbytes(1)).next() % 2) == 0
+    return (iter(randbytes(1)).next() % 2) == 0  
 
 
 def u_randbool():
@@ -156,6 +157,31 @@ def u_randbool():
     If no entropy is available, previous entropy will be re-used.
     """
     return (iter(u_randbytes(1)).next() % 2) == 0   
+
+
+def _rshift(val, n): 
+    """
+    Python equivalent of unsigned right bitshift operator.
+    (Same as (int)((long)x >>> y) in Java.)
+    """
+    return (val % 0x1000000000000) >> n
+
+
+def _next(bits):
+    """
+    Return the specified number of random bits (0-32) as an int.
+    If no entropy is available, the current thread will block until more
+    is retrieved from the blockchain.
+    """
+    return int(_rshift(unpack(">q",randbytes(8))[0], 48 - bits))
+
+
+def _u_next(bits):
+    """
+    Return the specified number of random bits (0-32) as an int.
+    If no entropy is available, previous entropy will be re-used.
+    """
+    return int(_rshift(unpack(">q",u_randbytes(8))[0], 48 - bits))
 
 
 def randint(min_n, max_n):
@@ -169,8 +195,18 @@ def randint(min_n, max_n):
         raise ValueError("min cannot be greater than max")
     if not (type(min_n) == type(max_n) == int):
         raise TypeError("min and max must be of type int")
-    # coming soon
-    pass
+    
+    int_range = max_n - min_n
+    if ((int_range & -int_range) == int_range): 
+        # if int_range is a power of 2
+        return int((int_range * long(_next(31))) >> 31) + min_n
+    else:
+        bits = _next(31)
+        next_int = bits % int_range
+        while (bits - int_range + (int_range-1)) < 0:
+            bits = _next(31)
+            next_int = bits % int_range
+    return next_int
 
 
 def u_randint(min_n, max_n):
@@ -183,8 +219,18 @@ def u_randint(min_n, max_n):
         raise ValueError("min cannot be greater than max")
     if not (type(min_n) == type(max_n) == int):
         raise TypeError("min and max must be of type int")
-    # coming soon
-    pass
+
+    int_range = max_n - min_n
+    if ((int_range & -int_range) == int_range): 
+        # if int_range is a power of 2
+        return int((int_range * long(_u_next(31))) >> 31) + min_n
+    else:
+        bits = _u_next(31)
+        next_int = bits % int_range
+        while (bits - next_int + (int_range-1)) < 0:
+            bits = u_next(31)
+            next_int = bits % int_range
+    return next_int
     
 
 def random():
