@@ -17,6 +17,9 @@ True
 
 >>> blockrandom.randint(0, 100)
 43
+
+>>> blockrandom.random()
+0.13928496837615967
 ````
 
 If you want a non-blocking random generator that will recycle previously collected entropy, similar to `/dev/urandom`, you can use the following:
@@ -30,9 +33,12 @@ False
 
 >>> blockrandom.u_randint(0, 100)
 22
+
+>>> blockrandom.u_random()
+0.24625146389007568
 ```
 
-More features (like `random()` and `uniform()`) are coming soon!
+More features and better concurrency support are coming soon!
 
 ### How it works ###
 

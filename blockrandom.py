@@ -230,7 +230,7 @@ def u_randint(min_n, max_n):
         while (bits - next_int + (int_range-1)) < 0:
             bits = u_next(31)
             next_int = bits % int_range
-    return next_int
+        return next_int
     
 
 def random():
@@ -239,8 +239,7 @@ def random():
     If no entropy is available, the current thread will block until more
     is retrieved from the blockchain.
     """
-    # coming soon
-    pass
+    return _next(24) / float(1 << 24)
 
 
 def u_random():
@@ -249,8 +248,7 @@ def u_random():
     Like /dev/urandom, previously captured entropy is re-used so that
     the thread will not block.
     """
-    # coming soon
-    pass
+    return _u_next(24) / float(1 << 24)
     
 
 def uniform(min_n, max_n):
