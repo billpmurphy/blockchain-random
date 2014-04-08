@@ -63,7 +63,7 @@ def fill_cache():
         sys.stderr.write(e)
     finally:
         _cache.release()
-    
+
     hex_hashes = reduce(add, (t['hash'] for t in transactions))
     bytes = bytearray.fromhex(hex_hashes)
 
@@ -83,7 +83,7 @@ def use_cpu_entropy():
     If, by some freak accident, we have nothing left in the spare cache,
     lean on Python's random.SystemRandom to get some entropy.
     """
-    sys.stderr.write("WARNING: Using /dev/urandom.")
+    sys.stderr.write("WARNING: Using /dev/urandom.\n")
     try:
         for byte in (_sysrandom.randint(0, 256) for i in range(8)):
             _spare_queue.put_nowait(byte)
@@ -99,7 +99,7 @@ def randbytes(num_bytes):
     """
     if num_bytes < 1:
         raise ValueError("Number of bytes must be >= 1")
-    
+
     bytes = []
     while len(bytes) < num_bytes:
         try:
@@ -148,7 +148,7 @@ def randbool():
     If no entropy is available, the current thread will block until more
     is retrieved from the blockchain.
     """
-    return (iter(randbytes(1)).next() % 2) == 0  
+    return _next(1) == 0
 
 
 def u_randbool():
@@ -156,13 +156,13 @@ def u_randbool():
     Returns a random boolean value.
     If no entropy is available, previous entropy will be re-used.
     """
-    return (iter(u_randbytes(1)).next() % 2) == 0   
+    return _u_next(1) == 0
 
 
-def _rshift(val, n): 
+def _rshift(val, n):
     """
     Python equivalent of unsigned right bitshift operator.
-    (Same as (int)((long)x >>> y) in Java.)
+    (Same as (int)((long)val >>> n) in Java.)
     """
     return (val % 0x1000000000000) >> n
 
@@ -195,9 +195,9 @@ def randint(min_n, max_n):
         raise ValueError("min cannot be greater than max")
     if not (type(min_n) == type(max_n) == int):
         raise TypeError("min and max must be of type int")
-    
+
     int_range = max_n - min_n
-    if ((int_range & -int_range) == int_range): 
+    if ((int_range & -int_range) == int_range):
         # if int_range is a power of 2
         return int((int_range * long(_next(31))) >> 31) + min_n
     else:
@@ -221,7 +221,7 @@ def u_randint(min_n, max_n):
         raise TypeError("min and max must be of type int")
 
     int_range = max_n - min_n
-    if ((int_range & -int_range) == int_range): 
+    if ((int_range & -int_range) == int_range):
         # if int_range is a power of 2
         return int((int_range * long(_u_next(31))) >> 31) + min_n
     else:
@@ -231,7 +231,7 @@ def u_randint(min_n, max_n):
             bits = u_next(31)
             next_int = bits % int_range
         return next_int + min_n
-    
+
 
 def random():
     """
@@ -249,7 +249,7 @@ def u_random():
     the thread will not block.
     """
     return _u_next(24) / float(1 << 24)
-    
+
 
 def uniform(min_n, max_n):
     """
@@ -260,8 +260,7 @@ def uniform(min_n, max_n):
     """
     if min_n >= max_n:
         raise ValueError("min cannot be greater than max")
-    # coming soon
-    pass
+    return random() * (min_n - max_n) + min_n
 
 
 def u_uniform(min_n, max_n):
@@ -273,7 +272,82 @@ def u_uniform(min_n, max_n):
     """
     if min_n >= max_n:
         raise ValueError("min cannot be greater than max")
-    # coming soon
-    pass
+    return u_random() * (min_n - max_n) + min_n
 
-fill_cache()
+
+def shuffle(iterable):
+    """
+    Shuffle an iterable in place (i.e., the original is mutated).
+    If no entropy is available, the current thread will block until more
+    is retrieved from the blockchain.
+    """
+    # Fisher-Yates algorithm
+    length = len(iterable)
+    for i in range(length):
+        j = randint(i, length)
+        iterable[i], iterable[j] = iterable[j], iterable[i]
+
+
+def u_shuffle(iterable):
+    """
+    Shuffle an iterable in place (i.e., the original is mutated).
+    Like /dev/urandom, previously captured entropy is re-used so that
+    the thread will not block.
+    """
+    # Fisher-Yates algorithm
+    length = len(iterable)
+    for i in range(length):
+        j = u_randint(i, length)
+        iterable[i], iterable[j] = iterable[j], iterable[i]
+
+
+def shuffled(iterable):
+    """
+    Returns a randomly shuffled list of elements given an iterable
+    (i.e. the original iterable is not mutated).
+    If no entropy is available, the current thread will block until more
+    is retrieved from the blockchain.
+    """
+    # Fisher-Yates algorithm
+    copy = iterable[:]
+    length = len(copy)
+    for i in range(length):
+        j = randint(i, length)
+        copy[i], copy[j] = copy[j], copy[i]
+    return copy
+
+
+def u_shuffled(iterable):
+    """
+    Returns a randomly shuffled list of elements given an iterable
+    (i.e. the original iterable is not mutated).
+    Like /dev/urandom, previously captured entropy is re-used so that
+    the thread will not block.
+    """
+    # Fisher-Yates algorithm
+    copy = iterable[:]
+    length = len(copy)
+    for i in range(length):
+        j = u_randint(i, length)
+        copy[i], copy[j] = copy[j], copy[i]
+    return copy
+
+
+def choice(iterable):
+    """
+    Returns a randomly chosen element from an iterable.
+    If no entropy is available, the current thread will block until more
+    is retrieved from the blockchain.
+    """
+    return iterable[randint(0, len(iterable))]
+
+
+def u_choice(iterable):
+    """
+    Returns a randomly chosen element from an iterable.
+    Like /dev/urandom, previously captured entropy is re-used so that
+    the thread will not block.
+    """
+    return iterable[u_randint(0, len(iterable))]
+
+

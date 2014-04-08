@@ -20,6 +20,20 @@ True
 
 >>> blockrandom.random()
 0.13928496837615967
+
+>>> blockrandom.uniform(1.5, 2.5)
+1.1863149404525757
+
+>>> blockrandom.choice(["a", "b", "c"])
+"b"
+
+>>> my_list = [1, 2, 3]
+>>> blockrandom.shuffle(my_list)  # mutating, in place shuffle
+>>> my_list
+[2, 1, 3]
+
+>>> blockrandom.shuffled([1, 2, 3])  # non-mutating shuffle
+[3, 1, 2]
 ````
 
 If you want a non-blocking random generator that will recycle previously collected entropy, similar to `/dev/urandom`, you can use the following:
@@ -36,6 +50,20 @@ False
 
 >>> blockrandom.u_random()
 0.24625146389007568
+
+>>> blockrandom.u_uniform(1.5, 2.5)
+1.380821943283081
+
+>>> blockrandom.u_choice(["a", "b", "c"])
+"c"
+
+>>> my_list = [1, 2, 3]
+>>> blockrandom.u_shuffle(my_list)  # mutating, in place shuffle
+>>> my_list
+[3, 2, 1]
+
+>>> blockrandom.u_shuffled([1, 2, 3])  # non-mutating shuffle
+[2, 3, 1]
 ```
 
 More features and better concurrency support are coming soon!
