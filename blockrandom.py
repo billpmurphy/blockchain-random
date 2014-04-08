@@ -206,7 +206,7 @@ def randint(min_n, max_n):
         while (bits - int_range + (int_range-1)) < 0:
             bits = _next(31)
             next_int = bits % int_range
-    return next_int
+    return next_int + min_n
 
 
 def u_randint(min_n, max_n):
@@ -230,7 +230,7 @@ def u_randint(min_n, max_n):
         while (bits - next_int + (int_range-1)) < 0:
             bits = u_next(31)
             next_int = bits % int_range
-        return next_int
+        return next_int + min_n
     
 
 def random():
