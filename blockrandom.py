@@ -1,95 +1,18 @@
-import multiprocessing, threading, Queue, sys, urllib2
-from murmur3 import murmur3_bytes, iterative_murmur3, murmur3_32
-from time import sleep, time
-from json import loads
-from collections import deque
-from operator import add
+import multiprocessing, Queue
+from math_utils import murmur3_bytes, iterative_murmur3, murmur3_32, _rshift
 from random import SystemRandom
 from struct import unpack
-
+from sys import stderr
+from hash_collection import HashCollectorDaemon
 
 _queue = multiprocessing.Queue(5000)
 _spare_queue = multiprocessing.Queue(5000)
-_url = "https://blockchain.info/unconfirmed-transactions?format=json"
-
-_cache = threading.RLock()
-_cache.most_recent = 0
-
+_url = "http://blockchain.info/unconfirmed-transactions?format=json"
 _sysrandom = SystemRandom() # only use in the most dire circumstances
 
-class BlockchainError(Exception):
-    pass
-
-
-def get_unconfirmed_transactions(url=_url):
-    """
-    Fetches the list of unconfirmed transactions from blockchain.info.
-    """
-    tries_left = 8
-    while True:
-        if tries_left <= 0:
-            raise BlockchainError("Cannot connect to blockchain.info")
-        else:
-            try:
-                response = urllib2.urlopen(url)
-                if response.code == 200:
-                    return loads(response.read())
-            except (urllib2.HTTPError, urllib2.URLError):
-                sleep(11) # as per blockchain.info API policy
-            tries_left -= 1
-
-
-def fill_cache():
-    """
-    Fill the cache with entropy from recent transactions.
-    """
-    _cache.acquire()
-    try:
-        tries = 8
-        while True:
-            if tries <= 0:
-                raise BlockchainError("Cannot find new transactions")
-            else:
-                transactions = get_unconfirmed_transactions()['txs']
-                if len(transactions) == 0 or \
-                        transactions[0]['time'] <= _cache.most_recent:
-                    tries -= 1
-                    sleep(11) # as per blockchain.info API policy
-                else:
-                    break
-        transactions = filter(lambda x: x > _cache.most_recent, transactions)
-        _cache.most_recent = max((t['time'] for t in transactions))
-    except Exception as e:
-        sys.stderr.write(e)
-    finally:
-        _cache.release()
-
-    hex_hashes = reduce(add, (t['hash'] for t in transactions))
-    bytes = bytearray.fromhex(hex_hashes)
-
-    for byte in bytes[::-1]:
-        try:
-            _queue.put_nowait(byte)
-        except Queue.Full:
-            pass
-        try:
-            _spare_queue.put_nowait(byte)
-        except Queue.Full:
-            pass
-
-
-def use_cpu_entropy():
-    """
-    If, by some freak accident, we have nothing left in the spare cache,
-    lean on Python's random.SystemRandom to get some entropy.
-    """
-    sys.stderr.write("WARNING: Using /dev/urandom.\n")
-    try:
-        for byte in (_sysrandom.randint(0, 256) for i in range(8)):
-            _spare_queue.put_nowait(byte)
-    except Queue.Full:
-        pass
-
+stream_entropy_daemon = HashCollectorDaemon(_url, _queue, _spare_queue, _sysrandom)
+stream_entropy_daemon.daemon = True
+stream_entropy_daemon.start()
 
 def randbytes(num_bytes):
     """
@@ -105,9 +28,7 @@ def randbytes(num_bytes):
         try:
             bytes.append(_queue.get_nowait())
         except Queue.Empty:
-            refill = threading.Thread(target=fill_cache())
-            refill.start()
-            refill.join()
+            pass
     return bytearray(bytes)
 
 
@@ -130,14 +51,14 @@ def u_randbytes(num_bytes):
                 block = [_spare_queue.get_nowait() for i in range(4)]
                 block = list(murmur3_32(bytearray(block)))
             except Queue.Empty:
-                use_cpu_entropy() # temporary hack
+                _use_cpu_entropy()
         if len(block) == 4:
             for byte in block:
                 bytes.append(byte)
                 try:
                     _spare_queue.put_nowait(byte)
                 except Queue.Full:
-                    continue
+                    pass
             block = []
     return bytearray(bytes)[:num_bytes]
 
@@ -157,14 +78,6 @@ def u_randbool():
     If no entropy is available, previous entropy will be re-used.
     """
     return _u_next(1) == 0
-
-
-def _rshift(val, n):
-    """
-    Python equivalent of unsigned right bitshift operator.
-    (Same as (int)((long)val >>> n) in Java.)
-    """
-    return (val % 0x1000000000000) >> n
 
 
 def _next(bits):
@@ -349,5 +262,3 @@ def u_choice(iterable):
     the thread will not block.
     """
     return iterable[u_randint(0, len(iterable))]
-
-

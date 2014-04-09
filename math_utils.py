@@ -1,4 +1,58 @@
+import numpy, math
 from operator import add
+
+############ Utilities for Handling Bytearrays ############
+
+def _rshift(val, n):
+    """
+    Python equivalent of unsigned right bitshift operator.
+    (Same as (int)((long)val >>> n) in Java.)
+    """
+    return (val % 0x1000000000000) >> n
+
+
+def entropy(bytes):
+    """
+    Calculate the Shannon entropy of a byte array or a list of
+    integers that represents a bytearray.
+    """
+    if type(bytes) is bytearray:
+        byte_ints = numpy.fromstring(str(bytes), dtype = 'uint8')
+    else:
+        byte_ints = numpy.array(bytes, dtype="uint8")
+    num_bytes = len(byte_ints)
+
+    frequencies = [0] * 256
+    for byte in byte_ints:
+        frequencies[byte] += 1
+
+    entropy = 0.0
+    for f in frequencies:
+        if f > 0:
+            freq = float(f) / num_bytes
+            entropy = entropy + freq * math.log(freq, 2)
+    return -entropy
+
+
+def save_bytes(bytes, filename):
+    """
+    Save binary data to file.
+    """
+    with open(filename, "wb") as f:
+        f.write(str(bytes))
+
+
+def load_bytes(filename):
+    """
+    Load a binary file.
+    """
+    with open(filename, "rb") as f:
+        bytes = f.read()
+    return bytearray(bytes)
+
+
+############ Assorted MurmurHash3 Utilities ############
+
 
 def murmur3_32(key, seed = 0x0):
     """
