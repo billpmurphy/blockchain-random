@@ -5,7 +5,15 @@ Are you trying to use true randomness in your application, but don't want to use
 
 ### How to use it ###
 
-You can use `blockrandom.py` just like Python's standard library `random` module.
+To install, just `git clone` this repository and run `python setup.py install`. For the lazy:
+
+```
+git clone https://github.com/billpmurphy/blockchain-random.git blockchain-random
+cd blockchain-random
+python setup.py install
+```
+
+After you've run the install script, you can use `blockrandom` just like Python's standard library `random` module.
 
 ```python
 >>> import blockrandom
