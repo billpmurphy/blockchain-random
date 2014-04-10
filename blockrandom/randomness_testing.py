@@ -19,7 +19,7 @@ def examine_bytes(bytes):
 
 
 def interactive_tests():
-    test_size = 10000
+    test_size = 100000
     prompt = "Press enter to view graphs (s to skip, q to quit)"
 
     print "\n## Test 1: How good is the blockchain as a source of entropy? ##\n"
@@ -57,12 +57,27 @@ def interactive_tests():
     else:
         examine_bytes(u_bytes)
 
-    # todo
     print "\n## Test 4: How good are our randint and u_randint functions()? ##\n"
     print "Generating %s randomn ints..." % test_size
-    print "Generating %s psuedorandomn ints..." % test_size
+    rand_ints = [blockrandom.randints(-200, 200) for i in range(test_size)]
+    user_input = raw_input(prompt).strip()
+    if user_input == "q":
+        exit()
+    elif user_input == "s":
+        pass
+    else:
+        examine_bytes(rand_ints)
 
-    print "\n## Test 5: How good are our random and u_random functions()? ##\n"
+    print "Generating %s psuedorandomn ints..." % test_size
+    u_rand_ints = [blockrandom.u_randints(-200, 200) for i in range(test_size)]
+    user_input = raw_input(prompt).strip()
+    if user_input == "q":
+        exit()
+    elif user_input == "s":
+        pass
+    else:
+        examine_bytes(u_rand_ints)
+
     exit()
 
 if __name__ == "__main__":
