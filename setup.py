@@ -5,4 +5,5 @@ setup(name = "blockrandom",
         description = "Library to collect and manipulate true randomness from the bitcoin blockchain",
         author="https://github.com/billpmurphy",
         url = "https://github.com/billpmurphy/blockchain-random",
-        packages = ["blockrandom"])
+        license = "GPL3",
+        py_modules = ["blockrandom"])

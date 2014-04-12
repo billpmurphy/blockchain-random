@@ -3,7 +3,7 @@ from math_utils import murmur3_bytes, iterative_murmur3, murmur3_32, _rshift
 from random import SystemRandom
 from struct import unpack
 from sys import stderr
-from hash_collection import HashCollectorDaemon
+from entropy_collector import HashCollectorDaemon
 
 _queue = multiprocessing.Queue(5000)
 _spare_queue = multiprocessing.Queue(5000)
@@ -173,7 +173,7 @@ def uniform(min_n, max_n):
     """
     if min_n >= max_n:
         raise ValueError("min cannot be greater than max")
-    return random() * (min_n - max_n) + min_n
+    return random() * (max_n - min_n) + min_n
 
 
 def u_uniform(min_n, max_n):
@@ -185,7 +185,7 @@ def u_uniform(min_n, max_n):
     """
     if min_n >= max_n:
         raise ValueError("min cannot be greater than max")
-    return u_random() * (min_n - max_n) + min_n
+    return u_random() * (max_n - min_n) + min_n
 
 
 def shuffle(iterable):
@@ -262,3 +262,20 @@ def u_choice(iterable):
     the thread will not block.
     """
     return iterable[u_randint(0, len(iterable))]
+
+
+def sample(iterable, n):
+    """
+    Returns a randomly chosen sample of size n from an iterable.
+    If no entropy is available, the current thread will block until more
+    is retrieved from the blockchain.
+    """
+    pass
+
+def u_sample(iterable, n):
+    """
+    Returns a randomly chosen sample of size n from an iterable.
+    Like /dev/urandom, previously captured entropy is re-used so that
+    the thread will not block.
+    """
+    pass

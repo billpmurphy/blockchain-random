@@ -18,8 +18,21 @@ def examine_bytes(bytes):
     pylab.show()
 
 
+def examine_numbers(lst):
+    """
+    Examine a list of numbers.
+    """
+    # histogram
+    pylab.figure()
+    pylab.hist(lst, bins=200, range=[min(lst), max(lst)])
+
+    pylab.figure()
+    pylab.plot(lst, "ro", range=[min(lst), max(lst)])
+    pylab.show()
+
+
 def interactive_tests():
-    test_size = 100000
+    test_size = 10000
     prompt = "Press enter to view graphs (s to skip, q to quit)"
 
     print "\n## Test 1: How good is the blockchain as a source of entropy? ##\n"
@@ -76,7 +89,7 @@ def interactive_tests():
     elif user_input == "s":
         pass
     else:
-        examine_bytes(u_rand_ints)
+        examine_numbers(u_rand_ints)
 
     exit()
 
