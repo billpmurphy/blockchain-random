@@ -42,6 +42,9 @@ True
 
 >>> blockrandom.shuffled([1, 2, 3])  # non-mutating shuffle
 [3, 1, 2]
+
+>>> blockrandom.sample(range(10), 5)
+[0, 7, 8, 5, 4]
 ````
 
 If you want a non-blocking random generator that will recycle previously collected entropy, similar to `/dev/urandom`, you can use the following:
@@ -72,6 +75,9 @@ False
 
 >>> blockrandom.u_shuffled([1, 2, 3])  # non-mutating shuffle
 [2, 3, 1]
+
+>>> blockrandom.u_sample(range(10), 5)
+[8, 1, 5, 3, 4]
 ```
 
 ### How it works ###

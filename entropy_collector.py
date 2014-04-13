@@ -26,13 +26,13 @@ class HashCollectorDaemon(multiprocessing.Process):
         """
         Fill the main queue and spare queue with entropy from recent transactions.
         """
-        most_recent_trans = max((t['time'] for t in transactions))    
+        most_recent_trans = max((t['time'] for t in transactions))
         if most_recent_trans > self.most_recent:
             self.most_recent = most_recent_trans
             transactions = filter(lambda x: x > most_recent_trans, transactions)
             hex_hashes = reduce(add, (t['hash'] for t in transactions))
             bytes = bytearray.fromhex(hex_hashes)
-    
+
             for byte in bytes[::-1]:
                 try:
                     self._queue.put_nowait(byte)
@@ -72,4 +72,4 @@ class HashCollectorDaemon(multiprocessing.Process):
                 self._spare_queue.put_nowait(byte)
         except Queue.Full:
             pass
-    
+

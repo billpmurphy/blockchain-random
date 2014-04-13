@@ -270,7 +270,20 @@ def sample(iterable, n):
     If no entropy is available, the current thread will block until more
     is retrieved from the blockchain.
     """
-    pass
+    # reservoir sampling
+    count = 0
+    reservoir = []
+    rand_int = 0
+    for item in iterable:
+        count += 1
+        if count <= n:
+            reservoir.append(item)
+        else:
+            rand_int = randint(0, count)
+            if rand_int < n:
+                reservoir[rand_int] = item
+    return reservoir
+
 
 def u_sample(iterable, n):
     """
@@ -278,4 +291,16 @@ def u_sample(iterable, n):
     Like /dev/urandom, previously captured entropy is re-used so that
     the thread will not block.
     """
-    pass
+    # reservoir sampling
+    count = 0
+    reservoir = []
+    rand_int = 0
+    for item in iterable:
+        count += 1
+        if count <= n:
+            reservoir.append(item)
+        else:
+            rand_int = u_randint(0, count)
+            if rand_int < n:
+                reservoir[rand_int] = item
+    return reservoir
