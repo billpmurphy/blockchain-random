@@ -25,10 +25,7 @@ def randbytes(num_bytes):
 
     bytes = []
     while len(bytes) < num_bytes:
-        try:
-            bytes.append(_queue.get_nowait())
-        except Queue.Empty:
-            pass
+        bytes.append(_queue.get())
     return bytearray(bytes)
 
 
@@ -83,8 +80,8 @@ def u_randbool():
 def _next(bits):
     """
     Return the specified number of random bits (0-32) as an int.
-    If no entropy is available, the current thread will block until more
-    is retrieved from the blockchain.
+    If no entropy is available, the current thread will block until more is
+    retrieved from the blockchain.
     """
     return int(_rshift(unpack(">q",randbytes(8))[0], 48 - bits))
 
@@ -99,10 +96,10 @@ def _u_next(bits):
 
 def randint(min_n, max_n):
     """
-    Returns a random 32-bit precision in between min_n (inclusive) and
-    max_n (exclusive).
-    If no entropy is available, the current thread will block until more
-    is retrieved from the blockchain.
+    Returns a random 32-bit precision in between min_n (inclusive) and max_n
+    (exclusive).
+    If no entropy is available, the current thread will block until more is
+    retrieved from the blockchain.
     """
     if min_n >= max_n:
         raise ValueError("min cannot be greater than max")
@@ -124,8 +121,8 @@ def randint(min_n, max_n):
 
 def u_randint(min_n, max_n):
     """
-    Returns a random 32-bit precision in between min_n (inclusive) and
-    max_n (exclusive).
+    Returns a random 32-bit precision in between min_n (inclusive) and max_n
+    (exclusive).
     If no entropy is available, previous entropy will be re-used.
     """
     if min_n >= max_n:
@@ -149,8 +146,8 @@ def u_randint(min_n, max_n):
 def random():
     """
     Returns a random 32-bit precision float.
-    If no entropy is available, the current thread will block until more
-    is retrieved from the blockchain.
+    If no entropy is available, the current thread will block until more is
+    retrieved from the blockchain.
     """
     return _next(24) / float(1 << 24)
 
@@ -158,18 +155,18 @@ def random():
 def u_random():
     """
     Returns a random 32-bit precision float.
-    Like /dev/urandom, previously captured entropy is re-used so that
-    the thread will not block.
+    Like /dev/urandom, previously captured entropy is re-used so that the
+    thread will not block.
     """
     return _u_next(24) / float(1 << 24)
 
 
 def uniform(min_n, max_n):
     """
-    Returns a random 32-bit precision float between min_n (exclusive) and
-    max_n (exclusive).
-    If no entropy is available, the current thread will block until more
-    is retrieved from the blockchain.
+    Returns a random 32-bit precision float between min_n (exclusive) and max_n
+    (exclusive).
+    If no entropy is available, the current thread will block until more is
+    retrieved from the blockchain.
     """
     if min_n >= max_n:
         raise ValueError("min cannot be greater than max")
@@ -178,10 +175,10 @@ def uniform(min_n, max_n):
 
 def u_uniform(min_n, max_n):
     """
-    Returns a random 32-bit precision float between min_n (exclusive) and
-    max_n (exclusive).
-    Like /dev/urandom, previously captured entropy is re-used so that
-    the thread will not block.
+    Returns a random 32-bit precision float between min_n (exclusive) and max_n
+    (exclusive).
+    Like /dev/urandom, previously captured entropy is re-used so that the
+    thread will not block.
     """
     if min_n >= max_n:
         raise ValueError("min cannot be greater than max")
@@ -191,10 +188,10 @@ def u_uniform(min_n, max_n):
 def shuffle(iterable):
     """
     Shuffle an iterable in place (i.e., the original is mutated).
-    If no entropy is available, the current thread will block until more
-    is retrieved from the blockchain.
+    If no entropy is available, the current thread will block until more is
+    retrieved from the blockchain.
+    Uses the Fisher-Yates algorithm.
     """
-    # Fisher-Yates algorithm
     length = len(iterable)
     for i in range(length):
         j = randint(i, length)
@@ -204,10 +201,10 @@ def shuffle(iterable):
 def u_shuffle(iterable):
     """
     Shuffle an iterable in place (i.e., the original is mutated).
-    Like /dev/urandom, previously captured entropy is re-used so that
-    the thread will not block.
+    Like /dev/urandom, previously captured entropy is re-used so that the
+    thread will not block.
+    Uses the Fisher-Yates algorithm.
     """
-    # Fisher-Yates algorithm
     length = len(iterable)
     for i in range(length):
         j = u_randint(i, length)
@@ -216,12 +213,12 @@ def u_shuffle(iterable):
 
 def shuffled(iterable):
     """
-    Returns a randomly shuffled list of elements given an iterable
-    (i.e. the original iterable is not mutated).
-    If no entropy is available, the current thread will block until more
-    is retrieved from the blockchain.
+    Returns a randomly shuffled list of elements given an iterable (i.e. the
+    original iterable is not mutated).
+    If no entropy is available, the current thread will block until more is
+    retrieved from the blockchain.
+    Uses the Fisher-Yates algorithm.
     """
-    # Fisher-Yates algorithm
     copy = iterable[:]
     length = len(copy)
     for i in range(length):
@@ -232,12 +229,12 @@ def shuffled(iterable):
 
 def u_shuffled(iterable):
     """
-    Returns a randomly shuffled list of elements given an iterable
-    (i.e. the original iterable is not mutated).
-    Like /dev/urandom, previously captured entropy is re-used so that
-    the thread will not block.
+    Returns a randomly shuffled list of elements given an iterable (i.e. the
+    original iterable is not mutated).
+    Like /dev/urandom, previously captured entropy is re-used so that the
+    thread will not block.
+    Uses the Fisher-Yates algorithm.
     """
-    # Fisher-Yates algorithm
     copy = iterable[:]
     length = len(copy)
     for i in range(length):
@@ -249,8 +246,8 @@ def u_shuffled(iterable):
 def choice(iterable):
     """
     Returns a randomly chosen element from an iterable.
-    If no entropy is available, the current thread will block until more
-    is retrieved from the blockchain.
+    If no entropy is available, the current thread will block until more is
+    retrieved from the blockchain.
     """
     return iterable[randint(0, len(iterable))]
 
@@ -258,8 +255,8 @@ def choice(iterable):
 def u_choice(iterable):
     """
     Returns a randomly chosen element from an iterable.
-    Like /dev/urandom, previously captured entropy is re-used so that
-    the thread will not block.
+    Like /dev/urandom, previously captured entropy is re-used so that the
+    thread will not block.
     """
     return iterable[u_randint(0, len(iterable))]
 
@@ -267,10 +264,10 @@ def u_choice(iterable):
 def sample(iterable, n):
     """
     Returns a randomly chosen sample of size n from an iterable.
-    If no entropy is available, the current thread will block until more
-    is retrieved from the blockchain.
+    If no entropy is available, the current thread will block until more is
+    retrieved from the blockchain.
+    Uses the reservoir sampling algorithm.
     """
-    # reservoir sampling
     count = 0
     reservoir = []
     rand_int = 0
@@ -288,10 +285,10 @@ def sample(iterable, n):
 def u_sample(iterable, n):
     """
     Returns a randomly chosen sample of size n from an iterable.
-    Like /dev/urandom, previously captured entropy is re-used so that
-    the thread will not block.
+    Like /dev/urandom, previously captured entropy is re-used so that the
+    thread will not block.
+    Uses the reservoir sampling algorithm.
     """
-    # reservoir sampling
     count = 0
     reservoir = []
     rand_int = 0

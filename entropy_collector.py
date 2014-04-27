@@ -24,7 +24,8 @@ class HashCollectorDaemon(multiprocessing.Process):
             raise HTTPError("Status code: %s" % response.status_code)
     def fill_queue(self, transactions):
         """
-        Fill the main queue and spare queue with entropy from recent transactions.
+        Fill the main queue and spare queue with entropy from recent
+        transactions.
         """
         most_recent_trans = max((t['time'] for t in transactions))
         if most_recent_trans > self.most_recent:
@@ -64,8 +65,9 @@ class HashCollectorDaemon(multiprocessing.Process):
             sleep(10)
     def _use_cpu_entropy(self):
         """
-        If, by some freak accident, we have nothing left in the spare cache,
-        lean on Python's random.SystemRandom to get some entropy.
+        If we were never able to connect to blockchain.info, and thus have no
+        entropy in the spare cache, lean on Python's random.SystemRandom to get
+        some entropy.
         """
         try:
             for byte in (self._sysrandom.randint(0, 256) for i in range(8)):
