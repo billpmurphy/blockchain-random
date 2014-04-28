@@ -26,12 +26,16 @@ def examine_numbers(lst):
     pylab.figure()
     pylab.hist(lst, bins=200, range=[min(lst), max(lst)])
 
+    # scatter
     pylab.figure()
-    pylab.plot(lst, "ro", range=[min(lst), max(lst)])
+    pylab.plot(lst, "ro", alpha=0.1)
     pylab.show()
 
 
 def interactive_tests():
+    """
+    Run interactive suite of tests.
+    """
     test_size = 10000
     prompt = "Press enter to view graphs (s to skip, q to quit)"
 
@@ -71,18 +75,18 @@ def interactive_tests():
         examine_bytes(u_bytes)
 
     print "\n## Test 4: How good are our randint and u_randint functions()? ##\n"
-    print "Generating %s randomn ints..." % test_size
-    rand_ints = [blockrandom.randints(-200, 200) for i in range(test_size)]
+    print "Generating %s random ints..." % test_size
+    rand_ints = [blockrandom.randint(-200, 200) for i in range(test_size)]
     user_input = raw_input(prompt).strip()
     if user_input == "q":
         exit()
     elif user_input == "s":
         pass
     else:
-        examine_bytes(rand_ints)
+        examine_numbers(rand_ints)
 
-    print "Generating %s psuedorandomn ints..." % test_size
-    u_rand_ints = [blockrandom.u_randints(-200, 200) for i in range(test_size)]
+    print "Generating %s psuedorandom ints..." % test_size
+    u_rand_ints = [blockrandom.u_randint(-200, 200) for i in range(test_size)]
     user_input = raw_input(prompt).strip()
     if user_input == "q":
         exit()
@@ -90,7 +94,7 @@ def interactive_tests():
         pass
     else:
         examine_numbers(u_rand_ints)
-
+    print "Done."
     exit()
 
 if __name__ == "__main__":
