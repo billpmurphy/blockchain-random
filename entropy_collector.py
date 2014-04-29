@@ -1,7 +1,12 @@
-import multiprocessing, Queue, urllib2
-from time import sleep
-from operator import add
+import multiprocessing
+import Queue
+import urllib2
+
 from json import loads
+from operator import add
+from sys import stderr
+from time import sleep
+
 
 class HashCollectorDaemon(multiprocessing.Process):
     def __init__(self, url, queue, spare_queue, sysrandom):
@@ -11,8 +16,10 @@ class HashCollectorDaemon(multiprocessing.Process):
         self._queue = queue
         self._spare_queue = spare_queue
         self._sysrandom = sysrandom
+
     def run(self):
         self.stream_entropy()
+
     def get_unconfirmed_transactions(self):
         """
         Fetches the list of unconfirmed transactions from blockchain.info.
@@ -21,17 +28,18 @@ class HashCollectorDaemon(multiprocessing.Process):
         if response.code == 200:
             return loads(response.read())['txs']
         else:
-            raise HTTPError("Status code: %s" % response.status_code)
-    def fill_queue(self, transactions):
+            raise urllib2.HTTPError("Status code: %s" % response.status_code)
+
+    def fill_queue(self, trans):
         """
         Fill the main queue and spare queue with entropy from recent
         transactions.
         """
-        most_recent_trans = max((t['time'] for t in transactions))
+        most_recent_trans = max((t['time'] for t in trans))
         if most_recent_trans > self.most_recent:
             self.most_recent = most_recent_trans
-            transactions = filter(lambda x: x > most_recent_trans, transactions)
-            hex_hashes = reduce(add, (t['hash'] for t in transactions))
+            trans = filter(lambda x: x > most_recent_trans, trans)
+            hex_hashes = reduce(add, (t['hash'] for t in trans))
             bytes = bytearray.fromhex(hex_hashes)
 
             for byte in bytes[::-1]:
@@ -43,6 +51,7 @@ class HashCollectorDaemon(multiprocessing.Process):
                     self._spare_queue.put_nowait(byte)
                 except Queue.Full:
                     pass
+
     def stream_entropy(self):
         """
         Stream new entropy from blockchain.info.
@@ -63,6 +72,7 @@ class HashCollectorDaemon(multiprocessing.Process):
             if len(transactions) > 0:
                 self.fill_queue(transactions)
             sleep(10)
+
     def _use_cpu_entropy(self):
         """
         If we were never able to connect to blockchain.info, and thus have no
@@ -74,4 +84,3 @@ class HashCollectorDaemon(multiprocessing.Process):
                 self._spare_queue.put_nowait(byte)
         except Queue.Full:
             pass
-

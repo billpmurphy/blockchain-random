@@ -1,8 +1,10 @@
-import numpy, math
+import math
 from operator import add
 
-############ Utilities for Handling Bytearrays ############
+import numpy
 
+
+############ Utilities for Handling Bytearrays ############
 def _rshift(val, n):
     """
     Python equivalent of unsigned right bitshift operator.
@@ -17,7 +19,7 @@ def entropy(bytes):
     integers that represents a bytearray.
     """
     if type(bytes) is bytearray:
-        byte_ints = numpy.fromstring(str(bytes), dtype = 'uint8')
+        byte_ints = numpy.fromstring(str(bytes), dtype='uint8')
     else:
         byte_ints = numpy.array(bytes, dtype="uint8")
     num_bytes = len(byte_ints)
@@ -54,7 +56,7 @@ def load_bytes(filename):
 ############ Assorted MurmurHash3 Utilities ############
 
 
-def murmur3_32(key, seed = 0x0):
+def murmur3_32(key, seed=0x0):
     """
     Pure Python implementation of 32-bit murmur3 hashing algorithm. Not
     cryptographically secure, but well-distributed and good enough for our
@@ -77,12 +79,12 @@ def murmur3_32(key, seed = 0x0):
     # mix into hash, 4 bytes at a time
     for block_start in xrange(0, nblocks * 4, 4):
         k = key[block_start + 3] << 24 | \
-             key[block_start + 2] << 16 | \
-             key[block_start + 1] << 8 | \
-             key[block_start + 0]
+            key[block_start + 2] << 16 | \
+            key[block_start + 1] << 8 | \
+            key[block_start + 0]
         k = (c1 * k) & 0xFFFFFFFF
         k = (k << r1 | k >> (32-r1)) & 0xFFFFFFFF
-        k = (c2 * k) & 0xFFFFFFFF;
+        k = (c2 * k) & 0xFFFFFFFF
         mhash ^= k
         mhash = (mhash << r2 | mhash >> (32-r2)) & 0xFFFFFFFF
         mhash = (mhash * m + n) & 0xFFFFFFFF
@@ -149,5 +151,5 @@ def murmur3_bytes(bytes, times=1):
     if len(bytes) % 4 != 0:
         bytes = bytearray.fromhex("00") * (4 - (len(bytes) % 4)) + bytes
     blocks = (str(bytes)[i:i+4] for i in range(0, len(bytes), 4))
-    hashed_blocks =  (iterative_murmur3(bytearray(b), times) for b in blocks)
+    hashed_blocks = (iterative_murmur3(bytearray(b), times) for b in blocks)
     return reduce(add, hashed_blocks)

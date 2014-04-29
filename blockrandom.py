@@ -1,18 +1,22 @@
-import multiprocessing, Queue
-from math_utils import murmur3_bytes, iterative_murmur3, murmur3_32, _rshift
+import multiprocessing
+import Queue
+from math_utils import murmur3_32, _rshift
 from random import SystemRandom
 from struct import unpack
-from sys import stderr
 from entropy_collector import HashCollectorDaemon
 
 _queue = multiprocessing.Queue(5000)
 _spare_queue = multiprocessing.Queue(5000)
 _url = "http://blockchain.info/unconfirmed-transactions?format=json"
-_sysrandom = SystemRandom() # only use in the most dire circumstances
+_sysrandom = SystemRandom()
 
-stream_entropy_daemon = HashCollectorDaemon(_url, _queue, _spare_queue, _sysrandom)
+stream_entropy_daemon = HashCollectorDaemon(
+    _url, _queue, _spare_queue, _sysrandom
+)
+
 stream_entropy_daemon.daemon = True
 stream_entropy_daemon.start()
+
 
 def randbytes(num_bytes):
     """
@@ -83,7 +87,7 @@ def _next(bits):
     If no entropy is available, the current thread will block until more is
     retrieved from the blockchain.
     """
-    return int(_rshift(unpack(">q",randbytes(8))[0], 48 - bits))
+    return int(_rshift(unpack(">q", randbytes(8))[0], 48 - bits))
 
 
 def _u_next(bits):
@@ -91,7 +95,7 @@ def _u_next(bits):
     Return the specified number of random bits (0-32) as an int.
     If no entropy is available, previous entropy will be re-used.
     """
-    return int(_rshift(unpack(">q",u_randbytes(8))[0], 48 - bits))
+    return int(_rshift(unpack(">q", u_randbytes(8))[0], 48 - bits))
 
 
 def randint(min_n, max_n):
