@@ -1,7 +1,7 @@
 from array import array
 from math import log
 from operator import add
-from struct import unpack
+
 
 ############ Utilities for Handling Bytearrays ############
 def _rshift(val, n):
@@ -50,8 +50,6 @@ def load_bytes(filename):
 
 
 ############ Assorted MurmurHash3 Utilities ############
-
-
 def murmur3_32(key, seed=0x0):
     """
     Pure Python implementation of 32-bit murmur3 hashing algorithm. Not

@@ -1,9 +1,10 @@
 import multiprocessing
 import Queue
-from math_utils import murmur3_32, _rshift
 from random import SystemRandom
 from struct import unpack
+
 from entropy_collector import HashCollectorDaemon
+from math_utils import murmur3_32, _rshift
 
 _queue = multiprocessing.Queue(5000)
 _spare_queue = multiprocessing.Queue(5000)

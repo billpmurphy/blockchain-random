@@ -1,7 +1,6 @@
 import multiprocessing
 import Queue
 import urllib2
-
 from json import loads
 from operator import add
 from sys import stderr
