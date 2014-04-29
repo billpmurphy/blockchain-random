@@ -52,7 +52,7 @@ def u_randbytes(num_bytes):
                 block = [_spare_queue.get_nowait() for i in range(4)]
                 block = list(murmur3_32(bytearray(block)))
             except Queue.Empty:
-                _use_cpu_entropy()
+                stream_entropy_daemon._use_cpu_entropy()
         if len(block) == 4:
             for byte in block:
                 bytes.append(byte)
@@ -142,7 +142,7 @@ def u_randint(min_n, max_n):
         bits = _u_next(31)
         next_int = bits % int_range
         while (bits - next_int + (int_range-1)) < 0:
-            bits = u_next(31)
+            bits = _u_next(31)
             next_int = bits % int_range
         return next_int + min_n
 
