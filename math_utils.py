@@ -1,8 +1,7 @@
-import math
+from array import array
+from math import log
 from operator import add
-
-import numpy
-
+from struct import unpack
 
 ############ Utilities for Handling Bytearrays ############
 def _rshift(val, n):
@@ -18,21 +17,18 @@ def entropy(bytes):
     Calculate the Shannon entropy of a byte array or a list of
     integers that represents a bytearray.
     """
-    if type(bytes) is bytearray:
-        byte_ints = numpy.fromstring(str(bytes), dtype='uint8')
-    else:
-        byte_ints = numpy.array(bytes, dtype="uint8")
-    num_bytes = len(byte_ints)
+    byte_ints = array("i", bytes)
 
     frequencies = [0] * 256
     for byte in byte_ints:
         frequencies[byte] += 1
 
     entropy = 0.0
+    num_bytes = len(byte_ints)
     for f in frequencies:
         if f > 0:
             freq = float(f) / num_bytes
-            entropy = entropy + freq * math.log(freq, 2)
+            entropy = entropy + freq * log(freq, 2)
     return -entropy
 
 
